@@ -186,7 +186,9 @@ def buildHipClangJob(Map conf=[:]){
 }
 
 def reboot(){
-    build job: 'reboot-slaves', propagate: false , parameters: [string(name: 'server', value: "${env.NODE_NAME}"),]
+    sh """
+        (sleep 3; sudo reboot) &
+    """
 }
 
 def buildHipClangJobAndReboot(Map conf=[:]){
