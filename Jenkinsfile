@@ -185,10 +185,40 @@ def buildHipClangJob(Map conf=[:]){
         return retimage
 }
 
-def reboot(){
-    sh """
-        (sleep 3; sudo reboot) &
-    """
+def reboot() {
+    try {
+        String nodeName = env.NODE_NAME
+
+        sh """
+            (sleep 2; sudo reboot) &
+        """
+
+        while (true) {
+            // some nodes can fail any action after reboot
+            try {
+                sleep(15)
+                List nodesList = nodesByLabel(label: nodeName, offline: false)
+                while (nodesList.size() == 0) {
+                    sleep(15)
+                    nodesList = nodesByLabel(label: nodeName, offline: false)
+                }
+
+                println("[INFO] Node is available")
+
+                break
+            } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+                throw e
+            } catch (Exception e) {
+                //do nothing
+            }
+        }
+    } catch (org.jenkinsci.plugins.workflow.steps.FlowInterruptedException e) {
+        throw e
+    } catch (Exception e) {
+        println("[ERROR] Failed to reboot machine")
+        println(e.toString())
+        println(e.getMessage())
+    }
 }
 
 def buildHipClangJobAndReboot(Map conf=[:]){
