@@ -110,6 +110,16 @@ def cmake_build(Map conf=[:]){
 }
 
 def buildHipClangJob(Map conf=[:]){
+        try {
+            sh """
+                docker stop \$(docker ps -a -q)
+                docker rm \$(docker ps -a -q)
+                docker image prune --all --force
+            """
+        } catch (e) {
+
+        }
+
         show_node_info()
 
         env.HSA_ENABLE_SDMA=0
