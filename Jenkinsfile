@@ -124,7 +124,7 @@ def buildHipClangJob(Map conf=[:]){
         def target_id = conf.get("target_id", "OFF")
         def mlir_build = conf.get("mlir_build", "ON")
         def build_fin = conf.get("build_fin", "OFF")
-        def dockerOpts="--device=/dev/kfd --device=/dev/dri --group-add video --group-add render --cap-add=SYS_PTRACE --security-opt seccomp=unconfined"
+        def dockerOpts="-u 0:0 --rm --ipc=host --network=host --device=/dev/kfd --device=/dev/dri --group-add video --group-add render --cap-add=SYS_PTRACE --security-opt seccomp=unconfined"
         if (conf.get("enforce_xnack_on", false)) {
             dockerOpts = dockerOpts + " --env HSA_XNACK=1"
         }
