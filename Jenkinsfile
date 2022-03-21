@@ -372,6 +372,7 @@ pipeline {
             parallel{
                 stage('Hip Tidy') {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     environment{
                         setup_cmd = "CXX='/opt/rocm/llvm/bin/clang++' cmake -DMIOPEN_BACKEND=HIP -DBUILD_DEV=On .. "
                         build_cmd = "make -j\$(nproc) -k analyze"
@@ -382,6 +383,7 @@ pipeline {
                 }
                 stage('OpenCL Tidy') {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     environment{
                         setup_cmd = "cmake -DMIOPEN_BACKEND=OpenCL -DBUILD_DEV=On .."
                         build_cmd = "make -j\$(nproc) -k analyze"
@@ -392,6 +394,7 @@ pipeline {
                 }
                 stage('Clang Format') {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     environment{
                         execute_cmd = "find .. -iname \'*.h\' \
                                 -o -iname \'*.hpp\' \
@@ -409,6 +412,7 @@ pipeline {
                 }
                 stage('Tuna Fin Build Test') {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     environment{
                       setup_cmd = "CXX='/opt/rocm/llvm/bin/clang++' cmake -DCMAKE_BUILD_TYPE=DEBUG -DMIOPEN_BACKEND=HIPNOGPU -DBUILD_SHARED_LIBS=Off -DMIOPEN_INSTALL_CXX_HEADERS=On -DMIOPEN_ENABLE_FIN=ON .. "
                       build_cmd = "make -j\$(nproc) "
@@ -419,6 +423,7 @@ pipeline {
                 }
                 stage('Perf DB Deserialize Test') {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     environment{
                         fin_flags = "-DCMAKE_BUILD_TYPE=DEBUG -DMIOPEN_BACKEND=HIPNOGPU -DBUILD_SHARED_LIBS=Off -DMIOPEN_INSTALL_CXX_HEADERS=On -DMIOPEN_ENABLE_FIN=ON"
 
@@ -433,6 +438,7 @@ pipeline {
                         expression { params.TARGET_NOGPU }
                     }
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     environment{
                         HipNoGPU_flags = "-DMIOPEN_BACKEND=HIPNOGPU -DMIOPEN_INSTALL_CXX_HEADERS=On"
                         build_cmd = "make -j\$(nproc)"
@@ -454,6 +460,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot(compiler: 'g++', build_type: 'debug', config_targets: Smoke_targets, codecov: true)
                     }
@@ -464,6 +471,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot(prefixpath: '/opt/rocm', config_targets: Smoke_targets)
                     }
@@ -474,6 +482,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot(build_type: 'debug', config_targets: Smoke_targets)
                     }
@@ -491,6 +500,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     environment{
                         // Can be removed altogether with when WORKAROUND_SWDEV_290754.
                         NOCOMGR_build_cmd = "CTEST_PARALLEL_LEVEL=4 MIOPEN_CONV_PRECISE_ROCBLAS_TIMING=0 MIOPEN_LOG_LEVEL=5 make -j\$(nproc) check"
@@ -505,6 +515,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot( setup_flags: "-DBUILD_SHARED_LIBS=Off", mlir_build: 'OFF')
                     }
@@ -515,6 +526,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     environment{
                         config_targets = "test_conv2d"
                         execute_cmd = "MIOPEN_CONV_PRECISE_ROCBLAS_TIMING=0 bin/test_conv2d --disable-verification-cache"
@@ -529,6 +541,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     environment{
                         config_targets =   "test_conv2d"
                         execute_cmd = "MIOPEN_FIND_MODE=2 CTEST_PARALLEL_LEVEL=4  MIOPEN_CONV_PRECISE_ROCBLAS_TIMING=0 bin/test_conv2d --disable-verification-cache"
@@ -543,6 +556,7 @@ pipeline {
                         expression { params.TARGET_VEGA20 || params.TARGET_VEGA10 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot()
                     }
@@ -560,6 +574,7 @@ pipeline {
                         expression { (params.TARGET_VEGA20 || params.TARGET_VEGA10) && params.DATATYPE_FP32 }
                     }
                     agent{ label rocmnode("vega") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot(compiler: 'g++', setup_flags: Full_test, build_install: "true")
                     }
@@ -573,12 +588,14 @@ pipeline {
             parallel {
                 stage('OpenCL Package') {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot(compiler: 'g++', package_build: "true", gpu_arch: "gfx900;gfx906;gfx908;gfx90a", needs_gpu:false)
                     }
                 }
                 stage("HIP Package /opt/rocm") {
                     agent{ label rocmnode("nogpu") }
+                    options { retry(2) }
                     steps{
                         buildHipClangJobAndReboot( package_build: "true", prefixpath: '/opt/rocm', gpu_arch: "gfx900;gfx906;gfx908;gfx90a", needs_gpu:false)
                     }
